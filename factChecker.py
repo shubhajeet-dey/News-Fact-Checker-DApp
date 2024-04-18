@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+
+import matplotlib.pyplot as plt
 from voters import Voter
 from tqdm import tqdm
 import random
 import secrets
+import os
 
 # Custom exception for errors
 class CustomException(Exception):
@@ -138,7 +141,8 @@ class FactChecker:
 						self.trustworthiness[voter][self.news.topic] += 1
 						accounts[voter].balance += (self.balance / cntOne)
 					else:
-						self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						# self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						pass
 				
 				result = "True"
 			
@@ -149,7 +153,8 @@ class FactChecker:
 						self.trustworthiness[voter][self.news.topic] += 1
 						accounts[voter].balance += (self.balance / cntZero)
 					else:
-						self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						# self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						pass
 				
 				result = "False"
 			
@@ -183,7 +188,8 @@ class FactChecker:
 						self.trustworthiness[voter][self.news.topic] += 1
 						accounts[voter].balance += (self.balance / cntOne)
 					else:
-						self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						# self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						pass
 				
 				result = "True"
 			
@@ -194,7 +200,8 @@ class FactChecker:
 						self.trustworthiness[voter][self.news.topic] += 1
 						accounts[voter].balance += (self.balance / cntZero)
 					else:
-						self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						# self.trustworthiness[voter][self.news.topic] = max(self.trustworthiness[voter][self.news.topic]-1,0)
+						pass
 				
 				result = "False"
 			
@@ -222,9 +229,9 @@ if __name__ == "__main__":
 
 
 	# N,p,q values
-	N = 100
-	q = 0.20
-	p = 0.75
+	N = 1000
+	q = 0.1
+	p = 0.9
 
 	# Let M be the number of News
 	M = 1000
@@ -236,24 +243,38 @@ if __name__ == "__main__":
 	for _ in range(M):
 		news.append([ ( 0 if random.random() < 0.5 else 1 ), "Political" ,"NewsContent" ,random.randint(1000, 2000) ])
 
+	maliciousVotersNum = int(q*N)
+	honestVotersNum = N - maliciousVotersNum
+	trustworthyVotersNum = int(p*honestVotersNum)
+	remHonestVotersNum = honestVotersNum - trustworthyVotersNum
+
 	# Creating malicious voters
-	for _ in range(int(q*N)):
+	for _ in range(maliciousVotersNum):
 		account = Voter(secrets.token_hex(5), M*200, True)
 		accounts[account.ID] = account
 		maliciousVoters.append(account)
 	
 	# Creating trustworthy voters
-	for _ in range(int((N - int(N*q))*p)):
+	for _ in range(trustworthyVotersNum):
 		account = Voter(secrets.token_hex(5), M*200, False)
 		accounts[account.ID] = account
 		trustworthyVoters.append(account)
 
 	# Creating remaining honest voters
-	for _ in range(N - int((N - int(N*q))*p)):
+	for _ in range(remHonestVotersNum):
 		account = Voter(secrets.token_hex(5), M*200, False)
 		accounts[account.ID] = account
 		remHonestVoters.append(account)
 	
+	print("")
+	print(" ========= Fact Checker Simulation ========= ")
+	print("N =", N)
+	print("q =", q)
+	print("p =", p)
+	print("Number of news items:", M)
+	print("")
+
+	print(" ============ Simulation Starts ============")
 	# Simulate
 	factChecker = FactChecker(secrets.token_hex(5), topics, 200)
 	results = []
@@ -302,32 +323,97 @@ if __name__ == "__main__":
 		finalResults = factChecker.getResults(requestor)
 		trustworthiness = dict()
 		for voterID in factChecker.trustworthiness:
-			trustworthiness[voterID] = factChecker.trustworthiness[voterID][news[i][1]] / (i+1)
+			trustworthiness[voterID] = factChecker.trustworthiness[voterID][news[i][1]] / M
 
 		results.append([finalResults, trustworthiness])
 
 
 	# Final results
-	print("Final Results")
-	print("Is matching?? :", results[-1][0] == ( "True" if news[-1][0] else "False") )
+	print("============= Simulation Ends =============")
+	print("")
+	print("Final Results:")
+	print("")
+
+	# Getting trustworthiness accross the news items
+	correct = 0
+	sumVeryTrustWorthyRange = [0.0]
+	sumRemHonestRange = [0.0]
+	sumMaliciousRange = [0.0]
+
+	for i in range(len(results)):
+		if (results[i][0] == "True" and news[i][0] == 1) or (results[i][0] == "False" and news[i][0] == 0):
+			correct += 1
+
+		sumVeryTrustWorthy = 0.0
+		sumRemHonest = 0.0
+		sumMalicious = 0.0
+
+		trustworthiness = results[i][1]
+		
+		for account in trustworthyVoters:
+			sumVeryTrustWorthy += trustworthiness[account.ID]
+		sumVeryTrustWorthy /= len(trustworthyVoters)
+		sumVeryTrustWorthyRange.append(sumVeryTrustWorthy)
+
+		for account in remHonestVoters:
+			sumRemHonest += trustworthiness[account.ID]
+		sumRemHonest /= len(remHonestVoters)
+		sumRemHonestRange.append(sumRemHonest)
+
+		for account in maliciousVoters:
+			sumMalicious += trustworthiness[account.ID]
+		sumMalicious /= len(maliciousVoters)
+		sumMaliciousRange.append(sumMalicious)
+
+	print(f"Number of Correct Predicions out of {M} news items: {correct}")
+	print("Accuracy of the System: " + str((correct / M) * 100) + "%")
+	print("")
 
 	tot = 0.0
 
 	for account in trustworthyVoters:
 		tot += results[-1][1][account.ID]
 
-	print("For Very trustworthy voters, trustworthiness =", tot / len(trustworthyVoters))
+	print("For Very trustworthy voters, final trustworthiness =", tot / len(trustworthyVoters))
 
 	tot = 0.0
-
+	
 	for account in remHonestVoters:
 		tot += results[-1][1][account.ID]
 
-	print("For remaining honest voters, trustworthiness =", tot / len(remHonestVoters))
+	print("For remaining honest voters, final trustworthiness =", tot / len(remHonestVoters))
 
 	tot = 0.0
 
 	for account in maliciousVoters:
 		tot += results[-1][1][account.ID]
 
-	print("For Malicious Voters, trustworthiness =", tot / len(maliciousVoters))
+	print("For Malicious Voters, final trustworthiness =", tot / len(maliciousVoters))
+
+	print("")
+
+	pdfFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(q*100))) + "_M_" + str(M) + ".pdf"
+	pdfFilename = os.path.join("results", pdfFilename)
+	pngFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(q*100))) + "_M_" + str(M) + ".png"
+	pngFilename = os.path.join("results", pngFilename)
+
+	plt.figure(figsize=(10, 6))
+	plt.plot(range(0, M+1), sumVeryTrustWorthyRange, label="Very Trustworthy", lw=2)
+	plt.plot(range(0, M+1), sumRemHonestRange, label="Remaining Honest", lw=2)
+	plt.plot(range(0, M+1), sumMaliciousRange, label="Malicious", lw=2)
+
+	plt.title('Trustworthiness over time')
+	plt.yticks([0.0, 0.3, 0.5, 0.7, 0.9])
+	plt.ylim(-0.05,1)
+	plt.ylabel('Trustworthiness')
+	plt.xlabel('News Items')
+	plt.legend()
+	plt.grid(True)
+	plt.tight_layout()
+	plt.savefig(pdfFilename, bbox_inches='tight')
+	plt.savefig(pngFilename, bbox_inches='tight')
+	plt.show()
+	print("Saving PNG plot image at", pngFilename)
+	print("Saving PDF plot image at", pdfFilename)
+
+	print("")
