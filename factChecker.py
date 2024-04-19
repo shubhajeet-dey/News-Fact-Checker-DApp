@@ -106,7 +106,6 @@ class FactChecker:
 		self.running = True
 		self.currentVoters = []
 		self.votes = dict()
-		self.newsTerm += 1
 
 	# Get News Fact Checking results (only requestor can call)
 	def getResults(self, requestor):
@@ -217,6 +216,7 @@ class FactChecker:
 		self.requestor = None
 		self.currentVoters = []
 		self.votes = dict()
+		self.newsTerm += 1
 
 		return result
 
