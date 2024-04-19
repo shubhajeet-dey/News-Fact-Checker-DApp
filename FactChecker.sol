@@ -38,7 +38,7 @@ contract NewsFactChecker {
       owner = msg.sender;
     }
 
-  // Change voting stake for each vote
+  // Change voting stake for each vote (only owner can call)
     function changeVotingStake(uint256 _votingStake) external {
       require(msg.sender == owner, "Only owner can call this function!!");
       votingStake = _votingStake;
