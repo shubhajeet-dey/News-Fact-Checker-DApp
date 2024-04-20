@@ -231,7 +231,7 @@ if __name__ == "__main__":
 	# N,p,q values
 	N = 1000
 	q = 0.1
-	p = 0.9
+	p = 0.6
 
 	# Let M be the number of News
 	M = 1000
@@ -392,9 +392,9 @@ if __name__ == "__main__":
 
 	print("")
 
-	pdfFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(q*100))) + "_M_" + str(M) + ".pdf"
+	pdfFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(p*100))) + "_M_" + str(M) + ".pdf"
 	pdfFilename = os.path.join("results", pdfFilename)
-	pngFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(q*100))) + "_M_" + str(M) + ".png"
+	pngFilename = "LineGraph_N_" + str(N) + "_q_" + ("{:02d}".format(int(q*100))) + "_p_" + ("{:02d}".format(int(p*100))) + "_M_" + str(M) + ".png"
 	pngFilename = os.path.join("results", pngFilename)
 
 	plt.figure(figsize=(10, 6))
